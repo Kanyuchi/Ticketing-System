@@ -152,9 +152,12 @@ export default function TicketCard({ ticket }: { ticket: TicketType }) {
         {isSoldOut ? (
           <span className="text-sm opacity-50">Sold Out</span>
         ) : ticket.requires_application ? (
-          <button className={`flex-1 py-2.5 rounded-lg text-sm font-medium ${btnStyle}`}>
+          <a
+            href={`/apply/${ticket.id}`}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium text-center ${btnStyle}`}
+          >
             Apply Now
-          </button>
+          </a>
         ) : (
           <>
             <button

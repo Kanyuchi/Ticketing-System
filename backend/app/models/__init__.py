@@ -4,5 +4,6 @@ from app.models.order_item import OrderItem
 from app.models.attendee import Attendee
 from app.models.voucher import Voucher
 from app.models.admin_user import AdminUser
+from app.models.application import Application
 
-__all__ = ["TicketType", "Order", "OrderItem", "Attendee", "Voucher", "AdminUser"]
+__all__ = ["TicketType", "Order", "OrderItem", "Attendee", "Voucher", "AdminUser", "Application"]

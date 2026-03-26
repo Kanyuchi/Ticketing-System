@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import auth, orders, payments, tickets, vouchers
+from app.routers import applications, auth, emails, orders, payments, tickets, upgrades, vouchers
 
 app = FastAPI(title="Proof of Talk 2026 - Ticketing API", version="0.1.0")
 
@@ -19,6 +19,9 @@ app.include_router(tickets.router, prefix="/api")
 app.include_router(orders.router, prefix="/api")
 app.include_router(vouchers.router, prefix="/api")
 app.include_router(payments.router, prefix="/api")
+app.include_router(applications.router, prefix="/api")
+app.include_router(emails.router, prefix="/api")
+app.include_router(upgrades.router, prefix="/api")
 
 
 @app.get("/api/health")

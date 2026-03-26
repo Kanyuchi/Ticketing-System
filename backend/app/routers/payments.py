@@ -68,14 +68,32 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        order_id = session["metadata"].get("order_id")
-        if order_id:
-            result = await db.execute(select(Order).where(Order.id == order_id))
+        metadata = session.get("metadata", {})
+        order_id = metadata.get("order_id")
+
+        if metadata.get("is_upgrade") == "true" and order_id:
+            # Handle upgrade payment
+            new_ticket_type_id = metadata.get("new_ticket_type_id")
+            if new_ticket_type_id:
+                from app.services.upgrade_service import apply_upgrade
+                await apply_upgrade(db, order_id, new_ticket_type_id)
+
+        elif order_id:
+            # Handle regular payment
+            result = await db.execute(
+                select(Order).where(Order.id == order_id).options(selectinload(Order.attendee))
+            )
             order = result.scalar_one_or_none()
             if order:
                 order.status = OrderStatus.CONFIRMED
                 order.payment_status = PaymentStatus.PAID
                 order.stripe_payment_intent = session.get("payment_intent")
                 await db.flush()
+
+                # Send confirmation email
+                from app.services.email_service import send_order_confirmation
+                await send_order_confirmation(
+                    order.attendee.email, order.order_number, order.total_eur, False
+                )
 
     return {"status": "ok"}

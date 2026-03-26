@@ -111,3 +111,63 @@ export const getVouchers = (token: string, ticketTypeId?: string) => {
     { headers: authHeaders(token) }
   );
 };
+
+// Applications
+export interface Application {
+  id: string;
+  ticket_type_id: string;
+  status: "pending" | "approved" | "rejected";
+  name: string;
+  email: string;
+  company: string | null;
+  title: string | null;
+  reason: string | null;
+  publication: string | null;
+  portfolio_url: string | null;
+  startup_name: string | null;
+  startup_website: string | null;
+  startup_stage: string | null;
+  voucher_code: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+}
+
+export const submitApplication = (data: Record<string, unknown>) =>
+  request<Application>("/applications", { method: "POST", body: JSON.stringify(data) });
+
+export const getApplication = (id: string) => request<Application>(`/applications/${id}`);
+
+export const getApplications = (token: string, params?: Record<string, string>) => {
+  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<Application[]>(`/applications${qs}`, { headers: authHeaders(token) });
+};
+
+export const reviewApplication = (token: string, id: string, data: { status: string; rejection_reason?: string }) =>
+  request<Application>(`/applications/${id}/review`, {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: authHeaders(token),
+  });
+
+// Emails
+export const sendEmail = (token: string, data: { to_email: string; subject: string; body: string }) =>
+  request<{ sent: boolean }>("/emails/send", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: authHeaders(token),
+  });
+
+// Upgrades
+export const calculateUpgrade = (data: { order_id: string; new_ticket_type_id: string }) =>
+  request<{ order_id: string; current_ticket: string; new_ticket: string; price_difference: number }>(
+    "/upgrades/calculate",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+
+export const createUpgradeCheckout = (data: { order_id: string; new_ticket_type_id: string; discount_code?: string }) =>
+  request<{ checkout_url: string } | { upgraded: boolean; order_id: string }>(
+    "/upgrades/checkout",
+    { method: "POST", body: JSON.stringify(data) }
+  );

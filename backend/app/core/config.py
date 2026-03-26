@@ -13,6 +13,9 @@ class Settings(BaseSettings):
 
     frontend_url: str = "http://localhost:3000"
 
+    sendgrid_api_key: str = ""
+    from_email: str = "tickets@proofoftalk.io"
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 

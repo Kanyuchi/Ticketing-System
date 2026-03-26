@@ -75,12 +75,21 @@ async def seed_data(db_session: AsyncSession):
         is_complimentary=True,
         sort_order=2,
     )
+    press = TicketType(
+        id=uuid.uuid4(),
+        name="Press Pass",
+        category=TicketCategory.PRESS,
+        price_eur=0,
+        is_complimentary=True,
+        requires_application=True,
+        sort_order=3,
+    )
     admin = AdminUser(
         id=uuid.uuid4(),
         email="test@admin.com",
         hashed_password=hash_password("testpass"),
         name="Test Admin",
     )
-    db_session.add_all([general, speaker, admin])
+    db_session.add_all([general, speaker, press, admin])
     await db_session.commit()
-    return {"general": general, "speaker": speaker, "admin": admin}
+    return {"general": general, "speaker": speaker, "press": press, "admin": admin}

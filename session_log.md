@@ -11,3 +11,16 @@
 - All 14 tests passing
 - Fixed passlib/bcrypt 5.x incompatibility by switching to direct bcrypt usage
 - Fixed PostgreSQL UUID type portability by creating custom GUID TypeDecorator
+
+## 2026-03-26 21:30 — Phase 2: Applications, Email, Upgrades
+- Added Application model with Press-specific fields (publication, portfolio_url) and Startup-specific fields (startup_name, website, stage)
+- Built application service: submit, review (approve/reject), duplicate detection, auto-voucher generation for complimentary passes on approval
+- Created email service with SendGrid integration (falls back to logging in dev): order confirmation, application received/approved/rejected, custom admin emails
+- Built ticket upgrade service: calculate price difference, Stripe checkout for upgrade payment, Stripe webhook handles upgrade completion
+- Extended admin dashboard with tabbed UI: Orders, Applications (review with approve/reject), Vouchers, Send Email
+- Created public application form pages at /apply/[ticketTypeId] with Press and Startup-specific fields
+- Created application status page at /application/[id] showing approval status and voucher code
+- Wired "Apply Now" buttons on ticket cards to route to application forms
+- Added email triggers: application submission sends confirmation, approval sends voucher/purchase link, rejection sends notification with reason
+- Wrote 14 Phase 2 smoke tests: application submission (Press/Startup), duplicate rejection, type validation, approval with voucher generation, rejection with reason, double-review prevention, admin listing, auth guards, custom email sending, upgrade calculation, downgrade prevention
+- All 28 tests passing (14 Phase 1 + 14 Phase 2)
