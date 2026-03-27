@@ -16,6 +16,11 @@ if "localhost" not in settings.database_url and "127.0.0.1" not in settings.data
 # Strip sslmode param if present (asyncpg doesn't support it in URL)
 db_url = settings.database_url.split("?")[0] if "sslmode" in settings.database_url else settings.database_url
 
+# Supabase pooler (pgbouncer) doesn't support prepared statements
+if "pooler.supabase.com" in db_url or ":6543" in db_url:
+    connect_args["statement_cache_size"] = 0
+    connect_args["prepared_statement_cache_size"] = 0
+
 engine = create_async_engine(db_url, echo=False, connect_args=connect_args)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
