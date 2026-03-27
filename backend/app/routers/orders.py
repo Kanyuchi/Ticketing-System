@@ -98,6 +98,22 @@ async def list_orders(
     return result.scalars().all()
 
 
+@router.get("/{order_id}/invoice")
+async def download_invoice(order_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Public: download PDF invoice for a confirmed order."""
+    from app.services.invoice_service import generate_invoice_pdf
+    try:
+        pdf_bytes = await generate_invoice_pdf(db, order_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"inline; filename=invoice-{order_id}.pdf"},
+    )
+
+
 @router.get("/export/csv")
 async def export_orders_csv(
     admin: AdminUser = Depends(get_current_admin),

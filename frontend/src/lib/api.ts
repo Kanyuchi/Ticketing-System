@@ -66,6 +66,8 @@ export const createOrder = (data: {
 
 export const getOrder = (id: string) => request<Order>(`/orders/${id}`);
 
+export const getInvoiceUrl = (orderId: string) => `${API_BASE}/orders/${orderId}/invoice`;
+
 export const validateVoucher = (code: string) =>
   request<{ valid: boolean; ticket_type_id: string }>(`/vouchers/validate/${code}`);
 

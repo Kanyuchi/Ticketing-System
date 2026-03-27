@@ -17,7 +17,8 @@
 - **Waitlist**: Join for sold-out types, position queue, admin notify next-in-line
 - **Analytics**: Sales by type, revenue over time, conversion funnel, top referrers dashboard
 - **Frontend**: Public ticket grid, application forms, order/application status, QR + social sharing, admin dashboard with 8 tabs
-- **Test suite**: 58 tests passing (14 + 14 + 11 + 13 + 6 Stripe e2e)
+- **PDF invoices**: Branded A4 invoice with company header, line items, VAT, footer — GET /api/orders/{id}/invoice
+- **Test suite**: 62 tests passing (14 + 14 + 11 + 13 + 6 Stripe e2e + 4 invoice)
 - **Deploy config**: Dockerfiles for backend + frontend, docker-compose.yml with Postgres
 - **Alembic migrations**: Complete initial migration for all 11 tables, env.py reads DB URL from app config
 - **Next.js build**: Passes clean (Suspense boundary fix applied)

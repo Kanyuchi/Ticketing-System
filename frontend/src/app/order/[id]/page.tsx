@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getOrder, createCheckout, getShareMeta, getQrUrl, getShareCardUrl, Order } from "@/lib/api";
+import { getOrder, createCheckout, getShareMeta, getQrUrl, getShareCardUrl, getInvoiceUrl, Order } from "@/lib/api";
 
 export default function OrderPage() {
   const params = useParams();
@@ -128,8 +128,18 @@ export default function OrderPage() {
           )}
 
           {isPaid && (
-            <div className="text-center text-green-600 font-medium">
-              Your ticket is confirmed. See you at Proof of Talk 2026!
+            <div className="text-center space-y-3">
+              <div className="text-green-600 font-medium">
+                Your ticket is confirmed. See you at Proof of Talk 2026!
+              </div>
+              <a
+                href={getInvoiceUrl(order.id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-6 py-2.5 bg-[#2d2d2d] text-white rounded-lg text-sm font-medium hover:opacity-90"
+              >
+                Download Invoice (PDF)
+              </a>
             </div>
           )}
         </div>

@@ -20,3 +20,12 @@
 - Updated seed.py: added quantity_total limits for ticket types (VIP Black: 50, Investor: 100, VIP: 200, General: 500, Startup: 100, Press: 50), added demo referral code, imported all models for create_all
 - Added 6 Stripe end-to-end tests: checkout creation, complimentary rejection, nonexistent order 404, webhook signature validation, paid order lifecycle, complimentary auto-confirm
 - 58/58 tests passing across all phases + Stripe e2e
+
+## 2026-03-27 14:30 — Custom PDF invoice feature
+- Built invoice_service.py with reportlab — branded A4 PDF with company header, invoice meta, bill-to section, line items table, subtotal/VAT/total, footer
+- Added GET /api/orders/{id}/invoice endpoint on orders router — returns PDF for confirmed orders, rejects pending/nonexistent
+- Updated frontend order page with "Download Invoice (PDF)" button for confirmed orders
+- Updated admin orders table with Invoice column (PDF link for confirmed orders)
+- Added reportlab to requirements.txt
+- 4 invoice tests (confirmed order, pending rejected, nonexistent, voucher order)
+- 62/62 tests passing

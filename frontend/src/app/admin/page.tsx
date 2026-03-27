@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   adminLogin,
   getOrders,
+  getInvoiceUrl,
   exportOrdersCsv,
   createVouchersBulk,
   getTicketTypes,
@@ -319,6 +320,7 @@ export default function AdminDashboard() {
                       <th className="px-4 py-3 font-medium">Status</th>
                       <th className="px-4 py-3 font-medium">Payment</th>
                       <th className="px-4 py-3 font-medium text-right">Total</th>
+                      <th className="px-4 py-3 font-medium">Invoice</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -336,10 +338,15 @@ export default function AdminDashboard() {
                           <span className={`px-2 py-0.5 rounded text-xs ${order.payment_status === "paid" || order.payment_status === "complimentary" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>{order.payment_status}</span>
                         </td>
                         <td className="px-4 py-3 text-right">{order.total_eur === 0 ? "Free" : `\u20AC${(order.total_eur / 100).toFixed(2)}`}</td>
+                        <td className="px-4 py-3">
+                          {order.status === "confirmed" && (
+                            <a href={getInvoiceUrl(order.id)} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">PDF</a>
+                          )}
+                        </td>
                       </tr>
                     ))}
                     {orders.length === 0 && (
-                      <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No orders found</td></tr>
+                      <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">No orders found</td></tr>
                     )}
                   </tbody>
                 </table>
