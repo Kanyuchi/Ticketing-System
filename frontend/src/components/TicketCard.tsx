@@ -31,7 +31,7 @@ function getButtonStyle(category: string) {
   return "bg-[#e8742a] text-white hover:opacity-90";
 }
 
-export default function TicketCard({ ticket }: { ticket: TicketType }) {
+export default function TicketCard({ ticket, referralCode }: { ticket: TicketType; referralCode?: string }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [buying, setBuying] = useState(false);
@@ -67,6 +67,7 @@ export default function TicketCard({ ticket }: { ticket: TicketType }) {
           title: form.title || undefined,
         },
         items: [{ ticket_type_id: ticket.id, quantity }],
+        referral_code: referralCode || sessionStorage.getItem("referral_code") || undefined,
       });
       router.push(`/order/${order.id}`);
     } catch (e: unknown) {

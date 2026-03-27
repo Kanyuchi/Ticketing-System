@@ -16,6 +16,7 @@ class OrderCreate(BaseModel):
     attendee: "AttendeeCreateInline"
     items: list[OrderItemCreate]
     voucher_code: str | None = None
+    referral_code: str | None = None
 
 
 class AttendeeCreateInline(BaseModel):

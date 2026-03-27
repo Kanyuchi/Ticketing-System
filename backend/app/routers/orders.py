@@ -12,6 +12,7 @@ from app.core.database import get_db
 from app.models.admin_user import AdminUser
 from app.models.attendee import Attendee
 from app.models.order import Order, OrderStatus, PaymentStatus
+from app.models.ticket_type import TicketType
 from app.routers.auth import get_current_admin
 from app.schemas.order import OrderCreate, OrderOut
 from app.services.order_service import create_order, get_order
@@ -26,6 +27,27 @@ async def place_order(data: OrderCreate, db: AsyncSession = Depends(get_db)):
         order = await create_order(db, data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    # Attribute to referral if provided
+    if data.referral_code:
+        from app.services.referral_service import attribute_order
+        await attribute_order(db, data.referral_code, order.id)
+
+    # Sync to Google Sheets (fire and forget)
+    from app.services.sheets_service import sync_order_to_sheet
+    ticket_type_name = "Unknown"
+    if order.items:
+        result = await db.execute(
+            select(TicketType).where(TicketType.id == order.items[0].ticket_type_id)
+        )
+        tt = result.scalar_one_or_none()
+        if tt:
+            ticket_type_name = tt.name
+    sync_order_to_sheet(
+        order.order_number, order.attendee.name, order.attendee.email,
+        ticket_type_name, order.total_eur, order.payment_status.value, order.status.value,
+    )
+
     return order
 
 

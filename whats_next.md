@@ -4,22 +4,23 @@
 Build a complete ticketing system for Proof of Talk 2026 with 8 ticket types, admin dashboard, Stripe payments, voucher codes, referral tracking, email comms, and mobile check-in.
 
 ## Done
-- Phase 1 MVP: project scaffold, DB models, API routes, Stripe integration, admin dashboard, voucher system, 14 passing smoke tests
-- Phase 2: Application flow (Press/Startup), email service (SendGrid), in-order upgrades, admin review UI, 14 more passing tests (28 total)
+- Phase 1: Project scaffold, DB models, API routes, Stripe integration, admin dashboard, voucher system (14 tests)
+- Phase 2: Application flow (Press/Startup), email service (SendGrid), in-order upgrades (14 tests)
+- Phase 3: Referral tracking + leaderboard, QR codes, social sharing cards, Google Sheets sync (11 tests)
 
 ## Now
-1. Start Phase 3: Referral tracking system (unique links/codes, attribution, dashboard view)
-2. Social sharing with custom "I'm Attending" cards
-3. Google Sheets API integration for live sales sync
-4. QR code generation for tickets
-5. Write Phase 3 smoke tests
+1. Mobile check-in app: QR scanner page, mark attendance, offline mode
+2. Analytics dashboard: sales by type, revenue over time, conversion funnel
+3. Referral rewards automation (sell X tickets → auto-upgrade ambassador)
+4. Waitlist management for sold-out ticket types
+5. Deploy to production (Docker compose, env setup)
 
 ## Soon
-- Mobile check-in app (QR scanning, offline mode)
-- Analytics dashboard (sales by type, conversion rates, revenue forecasting)
-- Referral rewards automation (sell X → auto-upgrade)
+- Multi-currency support (EUR + stablecoin)
+- Attendee self-service portal (view/transfer tickets)
+- Batch email campaigns from admin
 
 ## Later
-- Waitlist management for sold-out ticket types
-- Multi-currency support (EUR + stablecoin)
-- Attendee self-service portal
+- Event day live dashboard (check-in rate, capacity)
+- Post-event feedback collection
+- Multi-event support (reusable platform)

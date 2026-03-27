@@ -24,3 +24,18 @@
 - Added email triggers: application submission sends confirmation, approval sends voucher/purchase link, rejection sends notification with reason
 - Wrote 14 Phase 2 smoke tests: application submission (Press/Startup), duplicate rejection, type validation, approval with voucher generation, rejection with reason, double-review prevention, admin listing, auth guards, custom email sending, upgrade calculation, downgrade prevention
 - All 28 tests passing (14 Phase 1 + 14 Phase 2)
+
+## 2026-03-27 00:15 — Phase 3: Referrals, QR Codes, Social Sharing, Google Sheets
+- Added Referral model with ReferralAttribution for tracking ambassador performance (clicks, orders, revenue, conversion rate)
+- Built referral service: create codes (custom or auto-generated), track clicks with redirect, attribute orders, leaderboard
+- Created QR code generation service using `qrcode` lib — generates PNG with check-in URL for confirmed orders
+- Created social sharing card generator using Pillow — "I'm Attending" image with attendee name, ticket type, Proof of Talk branding
+- Built Google Sheets sync service using `gspread` — pushes order rows and summary aggregates (stubs to logging without credentials)
+- Added sharing router: `/sharing/qr/{order_id}`, `/sharing/card/{order_id}`, `/sharing/meta/{order_id}` (Twitter/LinkedIn URLs)
+- Wired referral attribution into order creation flow — orders with `referral_code` auto-attribute to referral
+- Wired Google Sheets sync into order creation — every new order pushes to configured sheet
+- Updated public ticket page to capture `?ref=` from URL and pass through to orders
+- Updated order confirmation page with QR code display, social share card preview, and Share on X / Share on LinkedIn buttons
+- Added Referrals tab to admin dashboard: create referral codes, leaderboard table (rank, clicks, orders, revenue, conversion rate)
+- Wrote 11 Phase 3 smoke tests: referral creation (auto + custom code), duplicate rejection, click tracking + redirect, order attribution with revenue, leaderboard, auth guard, QR generation (confirmed + rejected for pending), share card, share meta
+- All 39 tests passing (14 Phase 1 + 14 Phase 2 + 11 Phase 3)

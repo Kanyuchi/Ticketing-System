@@ -5,5 +5,9 @@ from app.models.attendee import Attendee
 from app.models.voucher import Voucher
 from app.models.admin_user import AdminUser
 from app.models.application import Application
+from app.models.referral import Referral, ReferralAttribution
 
-__all__ = ["TicketType", "Order", "OrderItem", "Attendee", "Voucher", "AdminUser", "Application"]
+__all__ = [
+    "TicketType", "Order", "OrderItem", "Attendee", "Voucher",
+    "AdminUser", "Application", "Referral", "ReferralAttribution",
+]

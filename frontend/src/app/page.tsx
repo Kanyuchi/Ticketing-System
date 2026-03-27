@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getTicketTypes, TicketType } from "@/lib/api";
 import TicketCard from "@/components/TicketCard";
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref");
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Store referral code for order attribution
+    if (refCode) {
+      sessionStorage.setItem("referral_code", refCode);
+    }
     getTicketTypes()
       .then(setTickets)
       .catch(() => setTickets([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refCode]);
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
@@ -44,7 +51,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tickets.map((ticket) => (
-              <TicketCard key={ticket.id} ticket={ticket} />
+              <TicketCard key={ticket.id} ticket={ticket} referralCode={refCode || undefined} />
             ))}
           </div>
         )}

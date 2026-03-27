@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     sendgrid_api_key: str = ""
     from_email: str = "tickets@proofoftalk.io"
 
+    google_sheets_credentials_file: str = ""
+    google_sheets_id: str = ""
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 

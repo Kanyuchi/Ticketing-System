@@ -10,12 +10,15 @@ import {
   getApplications,
   reviewApplication,
   sendEmail,
+  createReferral,
+  getReferralLeaderboard,
   Order,
   TicketType,
   Application,
+  ReferralData,
 } from "@/lib/api";
 
-type Tab = "orders" | "applications" | "vouchers" | "email";
+type Tab = "orders" | "applications" | "vouchers" | "referrals" | "email";
 
 export default function AdminDashboard() {
   const [token, setToken] = useState("");
@@ -40,6 +43,12 @@ export default function AdminDashboard() {
   const [voucherPrefix, setVoucherPrefix] = useState("POT26");
   const [voucherCount, setVoucherCount] = useState(10);
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
+
+  // Referrals
+  const [referrals, setReferrals] = useState<ReferralData[]>([]);
+  const [newRefName, setNewRefName] = useState("");
+  const [newRefEmail, setNewRefEmail] = useState("");
+  const [newRefCode, setNewRefCode] = useState("");
 
   // Email
   const [emailTo, setEmailTo] = useState("");
@@ -66,6 +75,11 @@ export default function AdminDashboard() {
       getTicketTypes().then(setTicketTypes),
     ]).finally(() => setLoading(false));
   }, [token, filters]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "referrals") return;
+    getReferralLeaderboard(token).then(setReferrals);
+  }, [token, activeTab]);
 
   useEffect(() => {
     if (!token || activeTab !== "applications") return;
@@ -117,6 +131,17 @@ export default function AdminDashboard() {
     }
   }
 
+  async function handleCreateReferral() {
+    if (!newRefName || !newRefEmail) return;
+    try {
+      await createReferral(token, { owner_name: newRefName, owner_email: newRefEmail, code: newRefCode || undefined });
+      setNewRefName(""); setNewRefEmail(""); setNewRefCode("");
+      getReferralLeaderboard(token).then(setReferrals);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to create referral");
+    }
+  }
+
   async function handleSendEmail(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -158,6 +183,7 @@ export default function AdminDashboard() {
     { key: "orders", label: "Orders" },
     { key: "applications", label: "Applications" },
     { key: "vouchers", label: "Vouchers" },
+    { key: "referrals", label: "Referrals" },
     { key: "email", label: "Send Email" },
   ];
 
@@ -354,6 +380,70 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Referrals Tab */}
+        {activeTab === "referrals" && (
+          <div className="space-y-6">
+            {/* Create Referral */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100">
+              <h2 className="text-lg font-bold mb-4">Create Referral Code</h2>
+              <div className="flex flex-wrap gap-3 items-end">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Ambassador Name *</label>
+                  <input value={newRefName} onChange={(e) => setNewRefName(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Email *</label>
+                  <input type="email" value={newRefEmail} onChange={(e) => setNewRefEmail(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Custom Code (optional)</label>
+                  <input value={newRefCode} onChange={(e) => setNewRefCode(e.target.value)} placeholder="Auto-generated" className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                </div>
+                <button onClick={handleCreateReferral} className="px-4 py-2 bg-[var(--accent-orange)] text-white rounded-lg text-sm hover:opacity-90">Create</button>
+              </div>
+            </div>
+
+            {/* Leaderboard */}
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="text-lg font-bold">Referral Leaderboard</h2>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">#</th>
+                    <th className="px-4 py-3 font-medium">Ambassador</th>
+                    <th className="px-4 py-3 font-medium">Code</th>
+                    <th className="px-4 py-3 font-medium text-right">Clicks</th>
+                    <th className="px-4 py-3 font-medium text-right">Orders</th>
+                    <th className="px-4 py-3 font-medium text-right">Revenue</th>
+                    <th className="px-4 py-3 font-medium text-right">Conv. Rate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {referrals.map((ref, i) => (
+                    <tr key={ref.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-bold text-gray-400">{i + 1}</td>
+                      <td className="px-4 py-3">
+                        <div>{ref.owner_name}</div>
+                        <div className="text-xs text-gray-400">{ref.owner_email}</div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[var(--accent-orange)]">{ref.code}</td>
+                      <td className="px-4 py-3 text-right">{ref.clicks}</td>
+                      <td className="px-4 py-3 text-right">{ref.orders_count}</td>
+                      <td className="px-4 py-3 text-right">{ref.revenue_eur === 0 ? "-" : `\u20AC${(ref.revenue_eur / 100).toFixed(2)}`}</td>
+                      <td className="px-4 py-3 text-right">{ref.conversion_rate ? `${(ref.conversion_rate * 100).toFixed(1)}%` : "-"}</td>
+                    </tr>
+                  ))}
+                  {referrals.length === 0 && (
+                    <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No referrals yet</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

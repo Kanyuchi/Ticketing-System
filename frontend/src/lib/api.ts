@@ -61,6 +61,7 @@ export const createOrder = (data: {
   attendee: { email: string; name: string; company?: string; title?: string };
   items: { ticket_type_id: string; quantity: number }[];
   voucher_code?: string;
+  referral_code?: string;
 }) => request<Order>("/orders", { method: "POST", body: JSON.stringify(data) });
 
 export const getOrder = (id: string) => request<Order>(`/orders/${id}`);
@@ -171,3 +172,33 @@ export const createUpgradeCheckout = (data: { order_id: string; new_ticket_type_
     "/upgrades/checkout",
     { method: "POST", body: JSON.stringify(data) }
   );
+
+// Referrals
+export interface ReferralData {
+  id: string;
+  code: string;
+  owner_name: string;
+  owner_email: string;
+  clicks: number;
+  orders_count: number;
+  revenue_eur: number;
+  conversion_rate?: number;
+}
+
+export const createReferral = (token: string, data: { owner_name: string; owner_email: string; code?: string }) =>
+  request<ReferralData>("/referrals", { method: "POST", body: JSON.stringify(data), headers: authHeaders(token) });
+
+export const getReferrals = (token: string) =>
+  request<ReferralData[]>("/referrals", { headers: authHeaders(token) });
+
+export const getReferralLeaderboard = (token: string) =>
+  request<ReferralData[]>("/referrals/leaderboard", { headers: authHeaders(token) });
+
+// Sharing
+export const getShareMeta = (orderId: string) =>
+  request<{ share_text: string; card_url: string; event_url: string; twitter_url: string; linkedin_url: string }>(
+    `/sharing/meta/${orderId}`
+  );
+
+export const getQrUrl = (orderId: string) => `${API_BASE}/sharing/qr/${orderId}`;
+export const getShareCardUrl = (orderId: string) => `${API_BASE}/sharing/card/${orderId}`;
