@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getTicketTypes, TicketType } from "@/lib/api";
 import TicketCard from "@/components/TicketCard";
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref");
   const [tickets, setTickets] = useState<TicketType[]>([]);
@@ -57,5 +57,13 @@ export default function Home() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

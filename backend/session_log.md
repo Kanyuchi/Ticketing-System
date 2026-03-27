@@ -13,3 +13,10 @@
 - Added API client functions for all new endpoints
 - 13 new Phase 4 smoke tests — 52/52 total passing across all phases
 - Registered 4 new routers in main.py: checkin, analytics, waitlist, rewards
+
+## 2026-03-27 11:15 — Production readiness: build fix, migrations, seed, Stripe tests
+- Fixed Next.js build error: wrapped useSearchParams in Suspense boundary on home page
+- Set up Alembic migrations: updated alembic.ini to pull DB URL from app config (async→sync conversion), wrote complete initial migration covering all 11 tables with proper Postgres UUID types
+- Updated seed.py: added quantity_total limits for ticket types (VIP Black: 50, Investor: 100, VIP: 200, General: 500, Startup: 100, Press: 50), added demo referral code, imported all models for create_all
+- Added 6 Stripe end-to-end tests: checkout creation, complimentary rejection, nonexistent order 404, webhook signature validation, paid order lifecycle, complimentary auto-confirm
+- 58/58 tests passing across all phases + Stripe e2e

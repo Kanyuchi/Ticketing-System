@@ -17,8 +17,10 @@
 - **Waitlist**: Join for sold-out types, position queue, admin notify next-in-line
 - **Analytics**: Sales by type, revenue over time, conversion funnel, top referrers dashboard
 - **Frontend**: Public ticket grid, application forms, order/application status, QR + social sharing, admin dashboard with 8 tabs
-- **Test suite**: 52 smoke tests passing (14 + 14 + 11 + 13)
+- **Test suite**: 58 tests passing (14 + 14 + 11 + 13 + 6 Stripe e2e)
 - **Deploy config**: Dockerfiles for backend + frontend, docker-compose.yml with Postgres
+- **Alembic migrations**: Complete initial migration for all 11 tables, env.py reads DB URL from app config
+- **Next.js build**: Passes clean (Suspense boundary fix applied)
 
 ## What's Not Built Yet
 - Alembic migrations (currently tests use SQLite in-memory, prod needs migration files)
@@ -48,5 +50,5 @@
 - **Check-in is per-order** (not per-attendee) — one QR code per order
 
 ## Current Focus
-- Phase 4 complete — all features implemented and tested (52/52)
-- Next: production deployment prep (migrations, real Stripe test, Docker deploy)
+- All phases complete — 58/58 tests passing
+- Next: production deployment (Docker Compose, real Stripe/SendGrid keys, DNS + SSL)

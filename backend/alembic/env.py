@@ -3,10 +3,16 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from app.core.config import settings
 from app.core.database import Base
 from app.models import *  # noqa: F401, F403
 
 config = context.config
+
+# Dynamically set the DB URL from app config, converting async driver to sync
+db_url = settings.database_url.replace("+asyncpg", "+psycopg2").replace("+aiosqlite", "")
+config.set_main_option("sqlalchemy.url", db_url)
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
