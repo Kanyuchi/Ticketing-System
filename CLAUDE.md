@@ -15,10 +15,10 @@ Ticketing system for **Proof of Talk 2026** — an event ticketing platform with
 
 ### Backend Structure
 - `app/core/` — Config (pydantic-settings), database engine, security (bcrypt + JWT), custom GUID type
-- `app/models/` — SQLAlchemy ORM: TicketType, Order, OrderItem, Attendee, Voucher, AdminUser
+- `app/models/` — SQLAlchemy ORM: TicketType, Order, OrderItem, Attendee, Voucher, AdminUser, Application, Referral, ReferralAttribution, CheckIn, WaitlistEntry
 - `app/schemas/` — Pydantic request/response models
-- `app/services/` — Business logic (order creation, voucher generation)
-- `app/routers/` — FastAPI routes: auth, tickets, orders, vouchers, payments
+- `app/services/` — Business logic (orders, vouchers, applications, email, upgrades, referrals, QR, sheets, check-in, analytics, waitlist, rewards)
+- `app/routers/` — FastAPI routes: auth, tickets, orders, vouchers, payments, applications, emails, upgrades, referrals, sharing, checkin, analytics, waitlist, rewards
 - `app/core/types.py` — Custom `GUID` type for cross-database UUID compatibility (Postgres native UUID, SQLite CHAR(32))
 
 ### Key Design Decisions
@@ -60,9 +60,10 @@ npm run dev        # http://localhost:3000
 
 The system is being built in phases. Each phase gets smoke tests before moving to the next.
 
-- **Phase 1 (DONE)**: Core ticket types, order creation, Stripe integration, admin dashboard with filters, CSV export, voucher system
-- **Phase 2**: Application flow (Startup/Press), email system, in-order upgrades
-- **Phase 3**: Referral system, social sharing, Google Sheets sync, mobile check-in, analytics
+- **Phase 1 (DONE)**: Core ticket types, order creation, Stripe integration, admin dashboard with filters, CSV export, voucher system (14 tests)
+- **Phase 2 (DONE)**: Application flow (Startup/Press), email system, in-order upgrades (14 tests)
+- **Phase 3 (DONE)**: Referral system, social sharing, QR codes, Google Sheets sync (11 tests)
+- **Phase 4 (DONE)**: Mobile check-in, analytics dashboard, waitlist management, referral rewards, Docker deploy setup (13 tests)
 
 ## Testing
 

@@ -6,8 +6,11 @@ from app.models.voucher import Voucher
 from app.models.admin_user import AdminUser
 from app.models.application import Application
 from app.models.referral import Referral, ReferralAttribution
+from app.models.checkin import CheckIn
+from app.models.waitlist import WaitlistEntry
 
 __all__ = [
     "TicketType", "Order", "OrderItem", "Attendee", "Voucher",
     "AdminUser", "Application", "Referral", "ReferralAttribution",
+    "CheckIn", "WaitlistEntry",
 ]

@@ -202,3 +202,85 @@ export const getShareMeta = (orderId: string) =>
 
 export const getQrUrl = (orderId: string) => `${API_BASE}/sharing/qr/${orderId}`;
 export const getShareCardUrl = (orderId: string) => `${API_BASE}/sharing/card/${orderId}`;
+
+// Check-in
+export interface CheckInData {
+  id: string;
+  order_id: string;
+  order_number: string;
+  attendee_name: string;
+  attendee_email: string;
+  ticket_type: string;
+  checked_in_by: string | null;
+  device_id: string | null;
+  notes: string | null;
+  checked_in_at: string;
+}
+
+export interface CheckInStats {
+  total_confirmed: number;
+  total_checked_in: number;
+  check_in_rate: number;
+}
+
+export const performCheckIn = (token: string, data: { order_id: string; device_id?: string; notes?: string }) =>
+  request<CheckInData>("/checkin", { method: "POST", body: JSON.stringify(data), headers: authHeaders(token) });
+
+export const getCheckIns = (token: string) =>
+  request<CheckInData[]>("/checkin", { headers: authHeaders(token) });
+
+export const getCheckInStats = (token: string) =>
+  request<CheckInStats>("/checkin/stats", { headers: authHeaders(token) });
+
+export const verifyCheckIn = (token: string, orderId: string) =>
+  request<{ checked_in: boolean; checked_in_at?: string }>(`/checkin/verify/${orderId}`, { headers: authHeaders(token) });
+
+// Analytics
+export interface AnalyticsDashboard {
+  total_revenue_eur: number;
+  total_orders: number;
+  total_confirmed: number;
+  total_checked_in: number;
+  sales_by_type: Array<{ ticket_type: string; category: string; quantity_sold: number; quantity_total: number | null; revenue_eur: number }>;
+  revenue_over_time: Array<{ date: string; revenue_eur: number; order_count: number }>;
+  funnel: { total_visits: number; total_orders: number; total_confirmed: number; total_checked_in: number; visit_to_order_rate: number; order_to_confirmed_rate: number };
+  top_referrers: Array<{ code: string; owner_name: string; orders_count: number; revenue_eur: number; conversion_rate: number }>;
+}
+
+export const getAnalyticsDashboard = (token: string) =>
+  request<AnalyticsDashboard>("/analytics/dashboard", { headers: authHeaders(token) });
+
+// Waitlist
+export interface WaitlistEntry {
+  id: string;
+  ticket_type_id: string;
+  ticket_type_name: string;
+  email: string;
+  name: string;
+  position: number;
+  notified: boolean;
+  created_at: string;
+}
+
+export const joinWaitlist = (data: { ticket_type_id: string; email: string; name: string }) =>
+  request<WaitlistEntry>("/waitlist", { method: "POST", body: JSON.stringify(data) });
+
+export const getWaitlist = (token: string, ticketTypeId?: string) => {
+  const qs = ticketTypeId ? `?ticket_type_id=${ticketTypeId}` : "";
+  return request<WaitlistEntry[]>(`/waitlist${qs}`, { headers: authHeaders(token) });
+};
+
+export const notifyWaitlist = (token: string, ticketTypeId: string, count: number = 1) =>
+  request<{ notified: number; emails: string[] }>(`/waitlist/notify/${ticketTypeId}?count=${count}`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+
+// Rewards
+export const getRewardTiers = () =>
+  request<{ tiers: Array<{ min_orders: number; reward: string; ticket_category: string; label: string }> }>("/rewards/tiers");
+
+export const getRewardStatus = (referralCode: string) =>
+  request<{ referral_code: string; orders_count: number; current_tier: string | null; next_tier: string | null; orders_to_next_tier: number | null }>(
+    `/rewards/status?referral_code=${referralCode}`
+  );

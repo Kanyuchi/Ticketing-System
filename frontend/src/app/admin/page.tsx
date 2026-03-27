@@ -12,13 +12,23 @@ import {
   sendEmail,
   createReferral,
   getReferralLeaderboard,
+  performCheckIn,
+  getCheckIns,
+  getCheckInStats,
+  getAnalyticsDashboard,
+  getWaitlist,
+  notifyWaitlist,
   Order,
   TicketType,
   Application,
   ReferralData,
+  CheckInData,
+  CheckInStats,
+  AnalyticsDashboard,
+  WaitlistEntry,
 } from "@/lib/api";
 
-type Tab = "orders" | "applications" | "vouchers" | "referrals" | "email";
+type Tab = "orders" | "applications" | "vouchers" | "referrals" | "email" | "checkin" | "analytics" | "waitlist";
 
 export default function AdminDashboard() {
   const [token, setToken] = useState("");
@@ -56,6 +66,19 @@ export default function AdminDashboard() {
   const [emailBody, setEmailBody] = useState("");
   const [emailSent, setEmailSent] = useState(false);
 
+  // Check-in
+  const [checkIns, setCheckIns] = useState<CheckInData[]>([]);
+  const [checkInStats, setCheckInStats] = useState<CheckInStats | null>(null);
+  const [checkInOrderId, setCheckInOrderId] = useState("");
+  const [checkInMessage, setCheckInMessage] = useState("");
+
+  // Analytics
+  const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
+
+  // Waitlist
+  const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([]);
+  const [waitlistTypeFilter, setWaitlistTypeFilter] = useState("");
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoginError("");
@@ -87,6 +110,24 @@ export default function AdminDashboard() {
     if (appFilter) params.status = appFilter;
     getApplications(token, params).then(setApplications);
   }, [token, activeTab, appFilter]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "checkin") return;
+    Promise.all([
+      getCheckIns(token).then(setCheckIns),
+      getCheckInStats(token).then(setCheckInStats),
+    ]);
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "analytics") return;
+    getAnalyticsDashboard(token).then(setAnalytics);
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "waitlist") return;
+    getWaitlist(token, waitlistTypeFilter || undefined).then(setWaitlistEntries);
+  }, [token, activeTab, waitlistTypeFilter]);
 
   async function handleExportCsv() {
     const res = await exportOrdersCsv(token, filters);
@@ -142,6 +183,30 @@ export default function AdminDashboard() {
     }
   }
 
+  async function handleCheckIn() {
+    if (!checkInOrderId.trim()) return;
+    setCheckInMessage("");
+    try {
+      const result = await performCheckIn(token, { order_id: checkInOrderId.trim() });
+      setCheckInMessage(`✓ Checked in ${result.attendee_name} (${result.ticket_type})`);
+      setCheckInOrderId("");
+      getCheckIns(token).then(setCheckIns);
+      getCheckInStats(token).then(setCheckInStats);
+    } catch (err: unknown) {
+      setCheckInMessage(err instanceof Error ? err.message : "Check-in failed");
+    }
+  }
+
+  async function handleNotifyWaitlist(ticketTypeId: string) {
+    try {
+      const result = await notifyWaitlist(token, ticketTypeId, 1);
+      alert(`Notified ${result.notified} people: ${result.emails.join(", ")}`);
+      getWaitlist(token, waitlistTypeFilter || undefined).then(setWaitlistEntries);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Notification failed");
+    }
+  }
+
   async function handleSendEmail(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -184,6 +249,9 @@ export default function AdminDashboard() {
     { key: "applications", label: "Applications" },
     { key: "vouchers", label: "Vouchers" },
     { key: "referrals", label: "Referrals" },
+    { key: "checkin", label: "Check-in" },
+    { key: "analytics", label: "Analytics" },
+    { key: "waitlist", label: "Waitlist" },
     { key: "email", label: "Send Email" },
   ];
 
@@ -440,6 +508,257 @@ export default function AdminDashboard() {
                   ))}
                   {referrals.length === 0 && (
                     <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No referrals yet</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Check-in Tab */}
+        {activeTab === "checkin" && (
+          <div className="space-y-6">
+            {/* Stats Bar */}
+            {checkInStats && (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white rounded-xl p-5 border border-gray-100 text-center">
+                  <div className="text-3xl font-bold">{checkInStats.total_confirmed}</div>
+                  <div className="text-xs text-gray-500 mt-1">Confirmed Orders</div>
+                </div>
+                <div className="bg-white rounded-xl p-5 border border-gray-100 text-center">
+                  <div className="text-3xl font-bold text-green-600">{checkInStats.total_checked_in}</div>
+                  <div className="text-xs text-gray-500 mt-1">Checked In</div>
+                </div>
+                <div className="bg-white rounded-xl p-5 border border-gray-100 text-center">
+                  <div className="text-3xl font-bold text-[var(--accent-orange)]">{(checkInStats.check_in_rate * 100).toFixed(1)}%</div>
+                  <div className="text-xs text-gray-500 mt-1">Check-in Rate</div>
+                </div>
+              </div>
+            )}
+
+            {/* Scanner Input */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100">
+              <h2 className="text-lg font-bold mb-4">Scan / Enter Order ID</h2>
+              <div className="flex gap-3 items-end">
+                <input
+                  value={checkInOrderId}
+                  onChange={(e) => setCheckInOrderId(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCheckIn()}
+                  placeholder="Paste or scan order ID..."
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+                />
+                <button onClick={handleCheckIn} className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:opacity-90">Check In</button>
+              </div>
+              {checkInMessage && (
+                <p className={`mt-3 text-sm ${checkInMessage.startsWith("✓") ? "text-green-600" : "text-red-500"}`}>{checkInMessage}</p>
+              )}
+            </div>
+
+            {/* Recent Check-ins */}
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="text-lg font-bold">Recent Check-ins</h2>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Order #</th>
+                    <th className="px-4 py-3 font-medium">Name</th>
+                    <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-3 font-medium">Ticket</th>
+                    <th className="px-4 py-3 font-medium">Checked In At</th>
+                    <th className="px-4 py-3 font-medium">By</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {checkIns.map((ci) => (
+                    <tr key={ci.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-mono">{ci.order_number}</td>
+                      <td className="px-4 py-3">{ci.attendee_name}</td>
+                      <td className="px-4 py-3">{ci.attendee_email}</td>
+                      <td className="px-4 py-3">{ci.ticket_type}</td>
+                      <td className="px-4 py-3">{new Date(ci.checked_in_at).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-gray-500">{ci.checked_in_by || "-"}</td>
+                    </tr>
+                  ))}
+                  {checkIns.length === 0 && (
+                    <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No check-ins yet</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === "analytics" && analytics && (
+          <div className="space-y-6">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl p-5 border border-gray-100 text-center">
+                <div className="text-3xl font-bold">{analytics.total_revenue_eur === 0 ? "€0" : `€${(analytics.total_revenue_eur / 100).toLocaleString()}`}</div>
+                <div className="text-xs text-gray-500 mt-1">Total Revenue</div>
+              </div>
+              <div className="bg-white rounded-xl p-5 border border-gray-100 text-center">
+                <div className="text-3xl font-bold">{analytics.total_orders}</div>
+                <div className="text-xs text-gray-500 mt-1">Total Orders</div>
+              </div>
+              <div className="bg-white rounded-xl p-5 border border-gray-100 text-center">
+                <div className="text-3xl font-bold text-green-600">{analytics.total_confirmed}</div>
+                <div className="text-xs text-gray-500 mt-1">Confirmed</div>
+              </div>
+              <div className="bg-white rounded-xl p-5 border border-gray-100 text-center">
+                <div className="text-3xl font-bold text-[var(--accent-orange)]">{analytics.total_checked_in}</div>
+                <div className="text-xs text-gray-500 mt-1">Checked In</div>
+              </div>
+            </div>
+
+            {/* Sales by Type */}
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="text-lg font-bold">Sales by Ticket Type</h2>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Ticket Type</th>
+                    <th className="px-4 py-3 font-medium">Category</th>
+                    <th className="px-4 py-3 font-medium text-right">Sold</th>
+                    <th className="px-4 py-3 font-medium text-right">Total</th>
+                    <th className="px-4 py-3 font-medium text-right">Revenue</th>
+                    <th className="px-4 py-3 font-medium">Progress</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {analytics.sales_by_type.map((s) => (
+                    <tr key={s.ticket_type} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">{s.ticket_type}</td>
+                      <td className="px-4 py-3"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{s.category}</span></td>
+                      <td className="px-4 py-3 text-right">{s.quantity_sold}</td>
+                      <td className="px-4 py-3 text-right">{s.quantity_total ?? "∞"}</td>
+                      <td className="px-4 py-3 text-right">{s.revenue_eur === 0 ? "-" : `€${(s.revenue_eur / 100).toLocaleString()}`}</td>
+                      <td className="px-4 py-3">
+                        {s.quantity_total ? (
+                          <div className="w-24 bg-gray-200 rounded-full h-2">
+                            <div className="bg-[var(--accent-orange)] h-2 rounded-full" style={{ width: `${Math.min(100, (s.quantity_sold / s.quantity_total) * 100)}%` }} />
+                          </div>
+                        ) : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Conversion Funnel */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100">
+              <h2 className="text-lg font-bold mb-4">Conversion Funnel</h2>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="text-center flex-1">
+                  <div className="text-2xl font-bold">{analytics.funnel.total_visits}</div>
+                  <div className="text-xs text-gray-500">Referral Visits</div>
+                </div>
+                <div className="text-gray-300 text-2xl">→</div>
+                <div className="text-center flex-1">
+                  <div className="text-2xl font-bold">{analytics.funnel.total_orders}</div>
+                  <div className="text-xs text-gray-500">Orders ({(analytics.funnel.visit_to_order_rate * 100).toFixed(1)}%)</div>
+                </div>
+                <div className="text-gray-300 text-2xl">→</div>
+                <div className="text-center flex-1">
+                  <div className="text-2xl font-bold text-green-600">{analytics.funnel.total_confirmed}</div>
+                  <div className="text-xs text-gray-500">Confirmed ({(analytics.funnel.order_to_confirmed_rate * 100).toFixed(1)}%)</div>
+                </div>
+                <div className="text-gray-300 text-2xl">→</div>
+                <div className="text-center flex-1">
+                  <div className="text-2xl font-bold text-[var(--accent-orange)]">{analytics.funnel.total_checked_in}</div>
+                  <div className="text-xs text-gray-500">Checked In</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Referrers */}
+            {analytics.top_referrers.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100">
+                  <h2 className="text-lg font-bold">Top Referrers</h2>
+                </div>
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-left">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">#</th>
+                      <th className="px-4 py-3 font-medium">Ambassador</th>
+                      <th className="px-4 py-3 font-medium">Code</th>
+                      <th className="px-4 py-3 font-medium text-right">Orders</th>
+                      <th className="px-4 py-3 font-medium text-right">Revenue</th>
+                      <th className="px-4 py-3 font-medium text-right">Conv.</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {analytics.top_referrers.map((r, i) => (
+                      <tr key={r.code} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-bold text-gray-400">{i + 1}</td>
+                        <td className="px-4 py-3">{r.owner_name}</td>
+                        <td className="px-4 py-3 font-mono text-[var(--accent-orange)]">{r.code}</td>
+                        <td className="px-4 py-3 text-right">{r.orders_count}</td>
+                        <td className="px-4 py-3 text-right">€{(r.revenue_eur / 100).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right">{(r.conversion_rate * 100).toFixed(1)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Waitlist Tab */}
+        {activeTab === "waitlist" && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl p-4 mb-2 border border-gray-100 flex gap-3 items-end">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Filter by Ticket Type</label>
+                <select value={waitlistTypeFilter} onChange={(e) => setWaitlistTypeFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                  <option value="">All Types</option>
+                  {ticketTypes.map((tt) => (<option key={tt.id} value={tt.id}>{tt.name}</option>))}
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">#</th>
+                    <th className="px-4 py-3 font-medium">Name</th>
+                    <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-3 font-medium">Ticket Type</th>
+                    <th className="px-4 py-3 font-medium">Notified</th>
+                    <th className="px-4 py-3 font-medium">Joined</th>
+                    <th className="px-4 py-3 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {waitlistEntries.map((entry) => (
+                    <tr key={entry.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-bold text-gray-400">{entry.position}</td>
+                      <td className="px-4 py-3">{entry.name}</td>
+                      <td className="px-4 py-3">{entry.email}</td>
+                      <td className="px-4 py-3">{entry.ticket_type_name}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded text-xs ${entry.notified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                          {entry.notified ? "Yes" : "No"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">{new Date(entry.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-3">
+                        {!entry.notified && (
+                          <button onClick={() => handleNotifyWaitlist(entry.ticket_type_id)} className="px-3 py-1 bg-[var(--accent-orange)] text-white rounded text-xs hover:opacity-90">Notify</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {waitlistEntries.length === 0 && (
+                    <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No waitlist entries</td></tr>
                   )}
                 </tbody>
               </table>
