@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "20"
   NEXT_PUBLIC_API_URL = "https://pot-ticketing-api.onrender.com/api"
+  NEXT_TELEMETRY_DISABLED = "1"
 
 # Netlify Next.js plugin handles SSR/routing automatically
 [[plugins]]
