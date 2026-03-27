@@ -45,3 +45,28 @@ app.include_router(rewards.router, prefix="/api")
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.get("/api/health/db")
+async def health_db():
+    """Debug endpoint — test database connectivity."""
+    import traceback
+    from sqlalchemy import text
+    from app.core.database import async_session, engine
+    from app.core.config import settings
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("SELECT 1"))
+            val = result.scalar()
+        return {
+            "db": "ok",
+            "result": val,
+            "url_prefix": settings.database_url[:40] + "...",
+        }
+    except Exception as e:
+        return {
+            "db": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()[-500:],
+            "url_prefix": settings.database_url[:40] + "...",
+        }
