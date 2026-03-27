@@ -1,14 +1,13 @@
 services:
   - type: web
     name: pot-ticketing-api
-    runtime: python
-    region: frankfurt  # EU — closest to event
+    runtime: docker
+    region: frankfurt
     rootDir: backend
-    buildCommand: ./build.sh
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
-        sync: false  # set manually in Render dashboard
+        sync: false
       - key: JWT_SECRET_KEY
         sync: false
       - key: STRIPE_SECRET_KEY
@@ -21,5 +20,3 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
-      - key: PYTHON_VERSION
-        value: 3.12.3
