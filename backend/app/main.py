@@ -9,9 +9,18 @@ from app.routers import (
 
 app = FastAPI(title="Proof of Talk 2026 - Ticketing API", version="0.1.0")
 
+allowed_origins = [
+    settings.frontend_url,
+    "http://localhost:3000",
+]
+# Also allow any Netlify preview deploys
+if settings.frontend_url and "netlify.app" not in settings.frontend_url:
+    allowed_origins.append("https://*.netlify.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:3000"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -29,3 +29,12 @@
 - Added reportlab to requirements.txt
 - 4 invoice tests (confirmed order, pending rejected, nonexistent, voucher order)
 - 62/62 tests passing
+
+## 2026-03-27 15:00 — Deployment config: Render + Netlify
+- Created render.yaml blueprint for backend (Python 3.12, Frankfurt region, env vars)
+- Created backend/build.sh — pip install + alembic migrate + seed (idempotent)
+- Created frontend/netlify.toml with @netlify/plugin-nextjs
+- Updated config.py with model_validator to normalize DATABASE_URL (postgres:// → postgresql+asyncpg://)
+- Updated CORS in main.py to allow Netlify preview deploys via allow_origin_regex
+- Generated production JWT secret
+- 62/62 tests still passing
