@@ -13,6 +13,4 @@ COPY . .
 
 EXPOSE 8000
 
-# Run migrations + seed on startup, then start server
-# Render passes PORT via env var
-CMD bash -c "alembic upgrade head && python seed.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+CMD ["bash", "start.sh"]
