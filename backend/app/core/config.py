@@ -7,12 +7,15 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _normalize_database_url(self):
-        """Ensure database_url uses asyncpg driver for async SQLAlchemy."""
+        """Ensure database_url uses psycopg async driver for SQLAlchemy."""
         url = self.database_url
+        # Normalize to postgresql+psycopg (works with pgbouncer, no prepared statement issues)
         if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif url.startswith("postgresql://") and "+asyncpg" not in url:
-            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            url = url.replace("postgres://", "postgresql+psycopg://", 1)
+        elif url.startswith("postgresql://") and "+" not in url.split("://")[0]:
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif "+asyncpg" in url:
+            url = url.replace("+asyncpg", "+psycopg")
         self.database_url = url
         return self
     jwt_secret_key: str = "change-me"

@@ -15,7 +15,8 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Convert async URL to sync for Alembic
-SYNC_URL = settings.database_url.replace("+asyncpg", "+psycopg2").replace("+aiosqlite", "")
+# Convert async URL to sync for Alembic (psycopg works in both sync and async mode)
+SYNC_URL = settings.database_url.replace("+psycopg", "+psycopg2").replace("+asyncpg", "+psycopg2").replace("+aiosqlite", "")
 
 
 def run_migrations_offline() -> None:

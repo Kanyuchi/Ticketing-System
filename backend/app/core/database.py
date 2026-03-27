@@ -1,27 +1,17 @@
-import ssl as _ssl
-
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
-# For remote databases (Supabase, etc.), enable SSL
-connect_args = {}
-if "localhost" not in settings.database_url and "127.0.0.1" not in settings.database_url:
-    ssl_ctx = _ssl.create_default_context()
-    ssl_ctx.check_hostname = False
-    ssl_ctx.verify_mode = _ssl.CERT_NONE
-    connect_args["ssl"] = ssl_ctx
-
-# Strip sslmode param if present (asyncpg doesn't support it in URL)
+# Strip sslmode param if present in URL (handled by driver automatically)
 db_url = settings.database_url.split("?")[0] if "sslmode" in settings.database_url else settings.database_url
 
-# Supabase pooler (pgbouncer) doesn't support prepared statements
-if "pooler.supabase.com" in db_url or ":6543" in db_url:
-    connect_args["statement_cache_size"] = 0
-    connect_args["prepared_statement_cache_size"] = 0
+# Use NullPool for external poolers (pgbouncer), standard pool for local
+is_pooler = "pooler.supabase.com" in db_url or ":6543" in db_url
+pool_kwargs = {"poolclass": NullPool} if is_pooler else {}
 
-engine = create_async_engine(db_url, echo=False, connect_args=connect_args)
+engine = create_async_engine(db_url, echo=False, **pool_kwargs)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
