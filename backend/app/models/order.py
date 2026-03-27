@@ -31,9 +31,13 @@ class Order(Base):
     attendee_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("attendees.id"), nullable=False
     )
-    status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), default=OrderStatus.PENDING)
+    status: Mapped[OrderStatus] = mapped_column(
+        Enum(OrderStatus, values_callable=lambda e: [x.value for x in e]),
+        default=OrderStatus.PENDING,
+    )
     payment_status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus), default=PaymentStatus.UNPAID
+        Enum(PaymentStatus, values_callable=lambda e: [x.value for x in e]),
+        default=PaymentStatus.UNPAID,
     )
     total_eur: Mapped[int] = mapped_column(Integer, default=0)  # cents
     stripe_session_id: Mapped[str | None] = mapped_column(String(255))

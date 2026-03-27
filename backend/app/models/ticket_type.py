@@ -25,7 +25,10 @@ class TicketType(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    category: Mapped[TicketCategory] = mapped_column(Enum(TicketCategory), nullable=False)
+    category: Mapped[TicketCategory] = mapped_column(
+        Enum(TicketCategory, values_callable=lambda e: [x.value for x in e]),
+        nullable=False,
+    )
     description: Mapped[str | None] = mapped_column(Text)
     price_eur: Mapped[int] = mapped_column(Integer, nullable=False, default=0)  # cents
     is_complimentary: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -23,7 +23,8 @@ class Application(Base):
         GUID(), ForeignKey("ticket_types.id"), nullable=False
     )
     status: Mapped[ApplicationStatus] = mapped_column(
-        Enum(ApplicationStatus), default=ApplicationStatus.PENDING
+        Enum(ApplicationStatus, values_callable=lambda e: [x.value for x in e]),
+        default=ApplicationStatus.PENDING,
     )
 
     # Applicant info

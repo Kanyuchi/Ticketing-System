@@ -1,7 +1,7 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 
 from app.core.config import settings
 from app.core.database import Base
@@ -9,29 +9,23 @@ from app.models import *  # noqa: F401, F403
 
 config = context.config
 
-# Dynamically set the DB URL from app config, converting async driver to sync
-db_url = settings.database_url.replace("+asyncpg", "+psycopg2").replace("+aiosqlite", "")
-config.set_main_option("sqlalchemy.url", db_url)
-
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
 
+# Convert async URL to sync for Alembic
+SYNC_URL = settings.database_url.replace("+asyncpg", "+psycopg2").replace("+aiosqlite", "")
+
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(url=SYNC_URL, target_metadata=target_metadata, literal_binds=True)
     with context.begin_transaction():
         context.run_migrations()
 
 
 def run_migrations_online() -> None:
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(SYNC_URL, poolclass=pool.NullPool)
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
